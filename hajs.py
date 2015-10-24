@@ -1,7 +1,6 @@
 __author__ = 'plizonczyk'
 
 import cv2
-import imutils
 import numpy as np
 
 #
@@ -82,7 +81,7 @@ def main():
             hull = cv2.convexHull(biggest_contour, returnPoints=False)
             defects = cv2.convexityDefects(biggest_contour, hull)
 
-            import ipdb; ipdb.set_trace()
+            # import ipdb; ipdb.set_trace()
 
             # print hsv[240, 320]
             if cv2.waitKey(1) & 0xFF == ord('q'):
