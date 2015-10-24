@@ -60,7 +60,10 @@ def main():
 
             cv2.imshow('Basic', frame)
 
-            __, contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+            try:
+                __, contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+            except ValueError:
+                contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
             cv2.drawContours(frame, contours, -1, (255, 0, 0), 3)
 
             max_area = 0
@@ -77,6 +80,9 @@ def main():
             cv2.imshow('Rectanble', frame)
 
             hull = cv2.convexHull(biggest_contour, returnPoints=False)
+            defects = cv2.convexityDefects(biggest_contour, hull)
+
+            import ipdb; ipdb.set_trace()
 
             # print hsv[240, 320]
             if cv2.waitKey(1) & 0xFF == ord('q'):
