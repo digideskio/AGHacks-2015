@@ -2,6 +2,7 @@ __author__ = 'plizonczyk'
 
 import cv2
 import numpy as np
+import uinput
 
 #
 # hog = cv2.HOGDescriptor()
@@ -45,8 +46,15 @@ import numpy as np
 #     return found
 
 def main():
-    cap = cv2.VideoCapture(0)
-
+    cap = cv2.VideoCapture(1)
+    device = uinput.Device([
+        uinput.KEY_E,
+        uinput.KEY_H,
+        uinput.KEY_L,
+        uinput.KEY_O,
+	uinput.REL_X,
+        uinput.REL_Y,
+        ])
     try:
         while True:
             ret, frame = cap.read()
@@ -63,7 +71,6 @@ def main():
                 __, contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
             except ValueError:
                 contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-            cv2.drawContours(frame, contours, -1, (255, 0, 0), 3)
 
             max_area = 0
             biggest_contour = None
@@ -74,10 +81,18 @@ def main():
                     max_area = area
                     biggest_contour = contour
 
+            cv2.drawContours(frame, [biggest_contour], -1, (255, 0, 0), 3)
             x, y, w, h = cv2.boundingRect(biggest_contour)
+	    print cv2.contourArea(biggest_contour)
+
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0))
             cv2.imshow('Rectanble', frame)
-
+		
+	    if (cv2.contourArea(biggest_contour) > 100000):
+		device.emit_click(uinput.KEY_H)
+	    else:
+		device.emit_click(uinput.KEY_E)
+	
             hull = cv2.convexHull(biggest_contour, returnPoints=False)
             defects = cv2.convexityDefects(biggest_contour, hull)
 
