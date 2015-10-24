@@ -4,46 +4,57 @@ import cv2
 import numpy as np
 import uinput
 
-#
-# hog = cv2.HOGDescriptor()
-# hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-#
-#
-# def detect_human(frame):
-#     found = hog.detectMultiScale(frame)
-#     out = np.zeros(frame.shape, np.uint8)
-#     np.copyto(out, frame)
-#     for finding in found:
-#         if len(finding) == 0 or len(finding[0]) != 4:
-#             continue
-#         data = finding[0]
-#         pt1 = int(data[0]), int(data[1])
-#         pt2 = int(data[2]), int(data[3])
-#         # import ipdb; ipdb.set_trace()
-#         cv2.rectangle(out, pt1, pt2, (0, 255, 0), 5)
-#         # cv2.rectangle(out, (50, 50), (250, 250), (0, 255, 0), 5)
-#     cv2.imshow('hummies', out)
-#     return found
-#
-#
-# hand_cascade = cv2.CascadeClassifier('hand_cascade2.xml')
-#
-# def detect_hand(frame):
-#     found = hog.detectMultiScale(frame)
-#     out = np.zeros(frame.shape, np.uint8)
-#     np.copyto(out, frame)
-#     for finding in found:
-#         if len(finding) == 0 or len(finding[0]) != 4:
-#             continue
-#         data = finding[0]
-#         pt1 = int(data[0]), int(data[2])
-#         pt2 = int(data[1]), int(data[3])
-#         print pt1, pt2
-#         # import ipdb; ipdb.set_trace()
-#         cv2.rectangle(out, pt1, pt2, (0, 255, 0), 5)
-#         # cv2.rectangle(out, (50, 50), (250, 250), (0, 255, 0), 5)
-#     cv2.imshow('hummies', out)
-#     return found
+
+height_offset = 100
+
+
+def find_contours(frame, blurred, roi, left=False):
+    try:
+        __, contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    except ValueError:
+        contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+    max_area = 0
+    biggest_contour = None
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > max_area:
+            max_area = area
+            biggest_contour = contour
+    
+    if biggest_contour is None:
+        return
+
+    cv2.drawContours(roi, [biggest_contour], -1, (255, 0, 0), 3)
+    x, y, w, h = cv2.boundingRect(biggest_contour)
+    # print cv2.contourArea(biggest_contour)
+
+    cv2.rectangle(roi, (x, y), (x+w, y+h), (0, 255, 0))
+
+    if left:
+        cx = int(x+w/2)
+        cy = int(y+h/2)
+	cv2.line(roi, (cx, 0), (cx, roi.shape[0]), (255, 0, 255), 2)
+	cv2.line(roi, (0, cy), (roi.shape[1], cy), (255, 0, 255), 2)
+
+    	cv2.imshow('left', roi)
+	do_left(cx, cy)
+    else:
+    	cv2.imshow('right', roi)
+        do_right(max_area)
+
+
+def do_left(cx, cy):
+    print (cx, cy)
+
+
+def do_right(area):
+    if area > 50000:
+	pass
+    else:
+        pass
+
 
 def main():
     cap = cv2.VideoCapture(1)
@@ -58,6 +69,7 @@ def main():
     try:
         while True:
             ret, frame = cap.read()
+	    height, width, __ = frame.shape
 
             blurred = np.zeros((frame.shape[0], frame.shape[1]), np.uint8)
             # TODO: balans bieli
@@ -67,34 +79,17 @@ def main():
 
             cv2.imshow('Basic', frame)
 
-            try:
-                __, contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-            except ValueError:
-                contours, __ = cv2.findContours(blurred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+	    frameright = frame[height_offset:height,0:width/2]
+	    frameleft = frame[height_offset:height,width/2:width]
 
-            max_area = 0
-            biggest_contour = None
+	    blurredright = blurred[height_offset:height,0:width/2]
+	    blurredleft = blurred[height_offset:height,width/2:width]
 
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if area > max_area:
-                    max_area = area
-                    biggest_contour = contour
-
-            cv2.drawContours(frame, [biggest_contour], -1, (255, 0, 0), 3)
-            x, y, w, h = cv2.boundingRect(biggest_contour)
-	    print cv2.contourArea(biggest_contour)
-
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0))
-            cv2.imshow('Rectanble', frame)
-		
-	    if (cv2.contourArea(biggest_contour) > 100000):
-		device.emit_click(uinput.KEY_H)
-	    else:
-		device.emit_click(uinput.KEY_E)
+            find_contours(frame, blurredright, frameright, left=False)
+	    find_contours(frame, blurredleft, frameleft, left=True)
 	
-            hull = cv2.convexHull(biggest_contour, returnPoints=False)
-            defects = cv2.convexityDefects(biggest_contour, hull)
+            # hull = cv2.convexHull(biggest_contour, returnPoints=False)
+            # defects = cv2.convexityDefects(biggest_contour, hull)
 
             # import ipdb; ipdb.set_trace()
 
