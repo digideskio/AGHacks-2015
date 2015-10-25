@@ -2,10 +2,16 @@ __author__ = 'plizonczyk'
 
 import cv2
 import numpy as np
-import uinput
+import time
+import pyautogui
 
-
+cap = cv2.VideoCapture(1)
 height_offset = 100
+
+pressedDown = 0
+pressedUp = 0
+pressedLeft = 0
+pressedRight = 0
 
 
 def find_contours(frame, blurred, roi, left=False):
@@ -47,7 +53,48 @@ def find_contours(frame, blurred, roi, left=False):
 
 def do_left(cx, cy):
     print (cx, cy)
+    if cy < 120 and pressedDown == 0:
+	pyautogui.keyDown("down")
+	global pressedDown
+	pressedDown = 1
+	print "DOWN"
+    elif  cy > 160 and pressedUp == 0:
+	pyautogui.keyDown("up")
+	global pressedUp
+	pressedUp = 1
+	print "UP"
+    elif  cx > 180 and pressedLeft == 0:
+	pyautogui.keyDown("left")
+	global pressedLeft
+	pressedLeft = 1
+	print "LEFT"
+    elif  cx < 140 and pressedRight == 0:
+	pyautogui.keyDown("right")
+	global pressedRight
+	pressedRight = 1
+	print "RIGHT"
 
+    else:
+	if pressedDown == 1 and cy > 120:
+		global pressedDown
+		pressedDown = 0
+		pyautogui.keyUp("down")
+	if pressedUp == 1 and cy < 160:
+		global pressedUp
+		pressedUp = 0
+		pyautogui.keyUp("up")
+
+	if pressedLeft == 1 and cx < 180:
+		global pressedLeft
+		pressedLeft = 0
+		pyautogui.keyUp("Left")
+
+	if pressedRight == 1 and cx > 140:
+		global pressedRight
+		pressedRight = 0
+		pyautogui.keyUp("right")
+	
+	#pyautogui.keyUp("up")
 
 def do_right(area):
     if area > 50000:
@@ -57,15 +104,7 @@ def do_right(area):
 
 
 def main():
-    cap = cv2.VideoCapture(1)
-    device = uinput.Device([
-        uinput.KEY_E,
-        uinput.KEY_H,
-        uinput.KEY_L,
-        uinput.KEY_O,
-	uinput.REL_X,
-        uinput.REL_Y,
-        ])
+  
     try:
         while True:
             ret, frame = cap.read()
