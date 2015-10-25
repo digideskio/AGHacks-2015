@@ -5,14 +5,16 @@ import numpy as np
 import time
 import pyautogui
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 height_offset = 100
 
 pressedDown = 0
 pressedUp = 0
 pressedLeft = 0
 pressedRight = 0
-
+pressedAtt = 0
+pressedDef = 0
+pressedJUmp = 0
 
 def find_contours(frame, blurred, roi, left=False):
     try:
@@ -52,7 +54,7 @@ def find_contours(frame, blurred, roi, left=False):
 
 
 def do_left(cx, cy):
-    print (cx, cy)
+    #print (cx, cy)
     if cy < 120 and pressedDown == 0:
 	pyautogui.keyDown("down")
 	global pressedDown
@@ -97,11 +99,30 @@ def do_left(cx, cy):
 	#pyautogui.keyUp("up")
 
 def do_right(area):
-    if area > 50000:
-	pass
-    else:
-        pass
+    print area
+    if area > 33000 and pressedAtt == 0:
+	pyautogui.keyDown("enter")
+	pyautogui.keyUp("enter")
+	global pressedAtt
+	pressedAtt = 1
+	print "ATT"
 
+    if area < 10000 and pressedDef == 0:
+	pyautogui.keyDown("ctrlright")
+	
+	global pressedDef
+	pressedDef = 1
+	print "DEF"
+	
+    else:
+        if pressedAtt == 1 and area < 33000:
+		global pressedAtt
+		pressedAtt = 0
+	if pressedDef == 1 and area > 10000:
+		print "DUPA"
+		pyautogui.keyUp("ctrlright")
+		global pressedDef
+		pressedDef = 0
 
 def main():
   
